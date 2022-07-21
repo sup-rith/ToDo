@@ -6,19 +6,6 @@ const validateRegisterInput = require('../validation/registerValidation');
 const jwt = require('jsonwebtoken');
 const requiresAuth = require('../middleware/permissions')
 
-router.get("/test", (req, res) => {
-    res.send("working route")
-});
-
-//Get all users
-// router.get("/users", requiresAuth, async (req, res) => {
-//     if(!req.user){
-//         return res.status(401).send("Unauthorized");
-//     };
-
-//     const listOfUsers = await User.find({})
-// })
-
 router.post("/register", async (req, res) => {
 
     try{
@@ -46,6 +33,17 @@ router.post("/register", async (req, res) => {
 
         //save and return user
         const savedUser = await newUser.save();
+
+        const payload = {userId: savedUser._id};
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: "7d"
+        })
+        res.cookie("access-token", token, {
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production"
+        });
+
         const userToReturn = {...savedUser._doc};
         delete userToReturn.password;
 
@@ -106,5 +104,15 @@ router.get('/current',requiresAuth, (req, res) => {
     }
     return res.json(req.user);
 })
+
+router.put('/logout', requiresAuth, async (req, res) => {
+    try{
+        res.clearCookie("access-token");
+        return res.json({success: true});
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err.message);
+    }
+});
 
 module.exports = router;

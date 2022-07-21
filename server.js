@@ -21,7 +21,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/todos", toDosRoute);
 
 
-mongoose.connect(process.env.MONGO_URI).then(() => {
+mongoose.connect(process.env.MONGO_URI_LOCAL).then(() => {
     console.log("Connected to database");
 
     app.listen(process.env.PORT, () => {
